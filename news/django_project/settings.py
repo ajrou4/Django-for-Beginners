@@ -11,21 +11,23 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from environs import Env
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
+env = Env() # new
+env.read_env()
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-)(u^tg(%%4jkbxw217rg&t5!^q=c1kd0u7))p&hf00cz6dt-7o'
+SECRET_KEY = env.str("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool("DEBUG", default=False)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [".herokuapp.com", "localhost", "127.0.0.1"]
 
 
 # Application definition
@@ -41,6 +43,8 @@ INSTALLED_APPS = [
     'pages.apps.PagesConfig',
     "crispy_forms", # new
     "crispy_bootstrap5", #new
+    "articles.apps.ArticlesConfig" ,
+    "whitenoise.runserver_nostatic",
 ]
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5" # new
 CRISPY_TEMPLATE_PACK = "bootstrap5" # new
@@ -55,6 +59,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    
 ]
 
 ROOT_URLCONF = 'django_project.urls'
@@ -81,10 +87,7 @@ WSGI_APPLICATION = 'django_project.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+"default": env.dj_db_url("DATABASE_URL")
 }
 
 
@@ -122,7 +125,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [BASE_DIR / "static"] 
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -132,4 +139,17 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "home"
 
+# settings.py
+
+# For LOCAL TESTING (emails print to console)
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+# Only uncomment this for production/Live SMTP testing:
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+DEFAULT_FROM_EMAIL = "ajrou1@hotmail.com"  # Must match verified sender in SendGrid
+EMAIL_HOST = 'smtp.sendgrid.net'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'apikey'  # Literally the word 'apikey'
+EMAIL_HOST_PASSWORD = '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'
